@@ -1,8 +1,11 @@
 #include <SFML/Graphics.hpp>
+#include "../headers/CircleBody.h"
 
 using namespace sf;
 
 int main() {
+
+    CircleBody circle(10, 10, Vector2f(300,300));
 
     RenderWindow App(VideoMode(600, 600), "Particle Simulator");
 
@@ -16,6 +19,8 @@ int main() {
                 App.close();
         }
 
+        App.clear();
+        App.draw(circle.getShape());
         App.display();
     }
 
