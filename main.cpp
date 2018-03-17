@@ -1,16 +1,14 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include <cmath>
 #include "CircleBody.h"
 #include "AttractorBody.h"
-#include <cmath>
+#include "SimMath.h"
 
 using namespace sf;
 using namespace std;
 
 int main() {
-
-    const float pixelsPerMeter = 5.0;
-    const float G = 6.67408; //6.67408E-11
 
     RenderWindow App(VideoMode(600, 600), "Particle Simulator");
     View AppView(FloatRect(0,0,600,600));
@@ -73,8 +71,8 @@ int main() {
         //Update section
         if (!isPaused){
 
-            Vector2f directionVector(attractor.centerOfMass - circle.centerOfMass);
-            float distance = sqrtf(powf(directionVector.x,2) + powf(directionVector.y,2));
+            Vector2f directionVector = getPointToPointVector(circle.centerOfMass, attractor.centerOfMass);
+            float distance = vectorMagnitude(directionVector);
             float distanceInMeters = distance / pixelsPerMeter;
 
             Vector2f normalizedDirectionVector = directionVector / distance;
