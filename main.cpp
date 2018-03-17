@@ -2,7 +2,6 @@
 #include <SFML/Graphics.hpp>
 #include "CircleBody.h"
 #include "AttractorBody.h"
-#include <windows.h>
 #include <cmath>
 
 using namespace sf;
