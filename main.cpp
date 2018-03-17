@@ -73,7 +73,7 @@ int main() {
         //Update section
         if (!isPaused){
 
-            Vector2f directionVector(attractor.center - circle.centerOfMass);
+            Vector2f directionVector(attractor.centerOfMass - circle.centerOfMass);
             float distance = sqrtf(powf(directionVector.x,2) + powf(directionVector.y,2));
             float distanceInMeters = distance / pixelsPerMeter;
 

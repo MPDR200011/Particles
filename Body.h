@@ -7,7 +7,7 @@ class Body{
 
 public:
     float mass;
-    sf::Vector2f velocity;
+    sf::Vector2f velocity; //This is in pixels per second, any changes to this variable have to have this in mind
     sf::Vector2f centerOfMass;
 
     Body();

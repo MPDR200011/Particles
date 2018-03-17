@@ -6,8 +6,8 @@
 class AttractorBody {
 
 public:
-    float mass;
-    sf::Vector2f center;
+    float mass; //Kilograms
+    sf::Vector2f centerOfMass;
     sf::CircleShape shape;
 
     AttractorBody(float mass, float radius, sf::Vector2f pos);
