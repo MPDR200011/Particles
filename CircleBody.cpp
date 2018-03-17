@@ -1,4 +1,6 @@
-#include "../headers/CircleBody.h"
+#include "CircleBody.h"
+
+using namespace sf;
 
 CircleBody::CircleBody() : Body(10.0, Vector2f(0, 0)) {
     shape = CircleShape(10);
@@ -10,11 +12,12 @@ CircleBody::CircleBody(float c_mass, float radius, sf::Vector2f pos, std::size_t
     shape.setPosition(pos - Vector2f(radius, radius));
 }
 
-CircleShape CircleBody::getShape() {
-    return shape;
+void CircleBody::moveCenter(Vector2f delta) {
+    Body::moveCenter(delta);
+    shape.move(delta);
 }
 
-void CircleBody::update() {
-    Body::update();
-    shape.move(velocity);
+void CircleBody::update(float deltaT, float pPMRatio) {
+    Body::update(deltaT, pPMRatio);
+    shape.move(velocity*deltaT);
 }

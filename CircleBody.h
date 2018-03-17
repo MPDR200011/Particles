@@ -6,16 +6,14 @@
 
 class CircleBody : public Body{
 
-private:
-    CircleShape shape;
-
 public:
+    sf::CircleShape shape;
+
     CircleBody();
     CircleBody(float c_mass, float radius, sf::Vector2f pos, std::size_t pointCount = 30);
 
-    CircleShape getShape();
-
-    void update();
+    void moveCenter(sf::Vector2f delta);
+    void update(float DeltaT, float pPMRatio);
 };
 
 

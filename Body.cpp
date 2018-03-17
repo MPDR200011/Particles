@@ -1,4 +1,6 @@
-#include "../headers/Body.h"
+#include "Body.h"
+
+using namespace sf;
 
 Body::Body(){
     mass = 10.0;
@@ -11,18 +13,14 @@ Body::Body(float b_mass, Vector2f center){
     velocity = Vector2f();
 }
 
-sf::Vector2f Body::getCenterOfMass() {
-    return centerOfMass;
-}
-
-float Body::getMass() {
-    return mass;
+void Body::moveCenter(sf::Vector2f delta) {
+    centerOfMass += delta;
 }
 
 void Body::accelerate(Vector2f acceleration) {
     velocity += acceleration;
 }
 
-virtual void Body::update() {
-    centerOfMass += velocity;
+void Body::update(float deltaT, float pPMRatio) {
+    centerOfMass += velocity*deltaT;
 }
