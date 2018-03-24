@@ -22,6 +22,7 @@ int main() {
     AttractorBody attractor(500, 10, Vector2f(300,300));
 
     bool isPaused = true;
+    bool accelerated = false;
 
     float timeStep = 1/60.0F;
     Time period = seconds(timeStep);
@@ -66,6 +67,16 @@ int main() {
                     attractor.moveCenter(delta);
                     break;
             }
+        }
+
+        if (Keyboard::isKeyPressed(Keyboard::F)){
+            if (!accelerated){
+                accelerated = true;
+                timeStep *= 2.0F;
+            }
+        } else {
+            accelerated = false;
+            timeStep = 1/60.0F;
         }
 
         //Update section
