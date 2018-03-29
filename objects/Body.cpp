@@ -13,7 +13,7 @@ Body::Body(float b_mass, Vector2f center){
     velocity = Vector2f();
 }
 
-void Body::moveCenter(sf::Vector2f delta) {
+void Body::moveCenter(sf::Vector2f &delta) {
     centerOfMass += delta;
 }
 
@@ -21,6 +21,8 @@ void Body::accelerate(Vector2f acceleration) {
     velocity += acceleration;
 }
 
-void Body::update(float deltaT, float pPMRatio) {
+void Body::update(float &deltaT) {
     centerOfMass += velocity*deltaT;
 }
+
+

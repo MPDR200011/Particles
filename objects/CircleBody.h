@@ -4,17 +4,15 @@
 #include "Body.h"
 #include <SFML/Graphics.hpp>
 
-class CircleBody : public Body{
+class CircleBody : public Body, public sf::CircleShape{
 
 public:
-    sf::CircleShape shape;
-
     CircleBody();
     CircleBody(float c_mass, float radius, sf::Vector2f pos, std::size_t pointCount = 30);
 
-    void moveCenter(sf::Vector2f delta);
-    void update(float DeltaT, float pPMRatio);
+    void moveCenter(sf::Vector2f &delta) override;
+    void update(float &DeltaT) override;
+    sf::Drawable &getShape() override ;
 };
-
 
 #endif //PARTICLE_SIMULATOR_CIRCLEBODY_H

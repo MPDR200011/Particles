@@ -3,18 +3,15 @@
 
 #include <SFML/Graphics.hpp>
 
-class AttractorBody {
+class AttractorBody: public sf::CircleShape {
 
 public:
     float mass; //Kilograms
     sf::Vector2f centerOfMass;
-    sf::CircleShape shape;
 
     AttractorBody(float mass, float radius, sf::Vector2f pos);
 
     void moveCenter(sf::Vector2f delta);
-
 };
-
 
 #endif //PARTICLE_SIMULATOR_ATTRACTORBODY_H

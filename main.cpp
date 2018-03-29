@@ -1,33 +1,37 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include <cmath>
-#include "CircleBody.h"
-#include "AttractorBody.h"
-#include "SimMath.h"
+#include "handler/EventHandler.h"
+#include "objects/CircleBody.h"
+#include "physics/PhysicsEngine.h"
+#include "physics/math/SimMath.h"
+#include "settings/GlobalStates.h"
+#include "settings/AppSettings.h"
 
 using namespace sf;
 using namespace std;
+using namespace sm;
 
 int main() {
 
     RenderWindow App(VideoMode(600, 600), "Particle Simulator");
-    View AppView(FloatRect(0,0,600,600));
     App.setView(AppView);
 
-    Vector2f windowCenter(App.getView().getSize().x/2.0F, App.getView().getSize().y/2.0F);
+    SimulatorCore core;
 
-    //10.5268
-    CircleBody circle(10, 5, Vector2f(0,150));
-    circle.velocity = Vector2f(8.94428, 0)*pixelsPerMeter;
-    AttractorBody attractor(500, 10, Vector2f(300,300));
+    updateWindowCenter(App);
 
-    bool isPaused = true;
-    bool accelerated = false;
+    CircleBody circle(5970, 5, Vector2f(300, 150));
+    core.addBody(circle);
+    core.bodyVector[0]->velocity = getOrbitSpeed(5.97E24, 5970, 150) * pixelsPerMeter;
+    core.addAttractor(AttractorBody(5.97E24, 10, Vector2f(300,300)));
 
-    float timeStep = 1/60.0F;
-    Time period = seconds(timeStep);
+    //FPS Setup
+    Time period = seconds(framePeriod);
     Time skip = seconds(0);
     Clock clock;
+
+    //Time elapsed per frame definition
+
     while (App.isOpen()){
 
         Vertex line[2];
@@ -35,73 +39,17 @@ int main() {
         Event event;
 
         //Event Poling and handling
-        while (App.pollEvent(event)) {
-
-            switch (event.type){
-                case Event::Closed:
-                    App.close();
-                    break;
-
-                case (Event::KeyPressed):
-                    switch (event.key.code){
-                        case Keyboard::P:
-                            isPaused = !isPaused;
-                            break;
-                        case Keyboard::Escape:
-                            App.close();
-                            break;
-                        case Keyboard::R:
-                            break;
-                    }
-                    break;
-
-                case Event::Resized:
-                    FloatRect visibleArea(0, 0, event.size.width, event.size.height);
-                    AppView.reset(visibleArea);
-                    App.setView(AppView);
-
-                    Vector2f delta(Vector2f(App.getView().getSize().x/2.0F, App.getView().getSize().y/2.0F)-windowCenter);
-                    windowCenter = Vector2f(App.getView().getSize().x/2.0F, App.getView().getSize().y/2.0F);
-
-                    circle.moveCenter(delta);
-                    attractor.moveCenter(delta);
-                    break;
-            }
-        }
-
-        if (Keyboard::isKeyPressed(Keyboard::F)){
-            if (!accelerated){
-                accelerated = true;
-                timeStep *= 2.0F;
-            }
-        } else {
-            accelerated = false;
-            timeStep = 1/60.0F;
-        }
+        handle(App, core, event);
 
         //Update section
         if (!isPaused){
-
-            Vector2f directionVector = getPointToPointVector(circle.centerOfMass, attractor.centerOfMass);
-            float distance = vectorMagnitude(directionVector);
-            float distanceInMeters = distance / pixelsPerMeter;
-
-            Vector2f normalizedDirectionVector = directionVector / distance;
-
-            float force = G * ((attractor.mass * circle.mass)/powf(distanceInMeters, 2));
-
-            circle.accelerate(normalizedDirectionVector * (force/circle.mass) * pixelsPerMeter * timeStep);
-
-            circle.update(timeStep, pixelsPerMeter);
+            update(core);
         }
-
-        line[0] = Vertex(circle.centerOfMass);
-        line[1] = Vertex(windowCenter);
 
         //Render section
         App.clear();
-        App.draw(circle.shape);
-        App.draw(attractor.shape);
+        App.draw(core.bodyVector[0]->getShape());
+        App.draw(core.attractorVector[0]);
         App.draw(line, 2, Lines);
         App.display();
 

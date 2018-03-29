@@ -13,10 +13,10 @@ public:
     Body();
     Body(float mass, sf::Vector2f center);
 
-    virtual void moveCenter(sf::Vector2f delta);
+    virtual void moveCenter(sf::Vector2f &delta) = 0;
     void accelerate(sf::Vector2f acceleration);
-    virtual void update(float deltaT, float pPMRatio);
-
+    virtual void update(float &deltaT) = 0;
+    virtual sf::Drawable &getShape() = 0;
 };
 
 #endif //PARTICLE_SIMULATOR_BODY_H
