@@ -2,3 +2,6 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 CMakeCache.txt
+.vscode
+PhysicsSim
+compile_commands.json
