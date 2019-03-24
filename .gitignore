@@ -5,3 +5,5 @@ CMakeCache.txt
 .vscode
 PhysicsSim
 compile_commands.json
+.ccls-cache/
+.idea/
