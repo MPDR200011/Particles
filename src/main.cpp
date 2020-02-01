@@ -1,9 +1,9 @@
 #include <SFML/Graphics.hpp>
-#include <atomic>
 #include <iostream>
-#include <thread>
 #include <vector>
-#include "Particle.hpp"
+#include "ECSAdmin.hpp"
+#include "Components.hpp"
+#include "Systems.hpp"
 
 using namespace sf;
 using namespace std;
@@ -21,29 +21,49 @@ int main(int argc, char* argv[]) {
     }
 
     cout << "Starting window.\n";
-    RenderWindow app(VideoMode(800, 600), "Particle Simulator",
-                     Style::Titlebar);
+    sf::RenderWindow app = RenderWindow(VideoMode(800, 600), "Particle Simulator", Style::Titlebar);
+    ECSAdmin admin;
+    admin.createSingleton(
+        WindowComponent {
+            .window = &app
+        }
+    );
+
+    AppState* appState = admin.createSingleton(
+        AppState {.paused=true}
+    );
+
     cout << "Created window.\n";
     srand(time(nullptr));
     for (int i = 0; i < num; i++) {
         float x = rand() % 800;
         float y = rand() % 600;
-        // cout << "Spawning a particle at " << x << ", " << y << endl;
-        auto* particle = new Particle(100, Vector2f(x, y));
-        particle->setVelocity(Vector2f(rand() % 100 - 50, rand() % 100 - 50));
-        particle->setFillColor(Color(rand() % 256, rand() % 256, rand() % 256));
+
+        CircleShape shape(5);
+        shape.setFillColor(Color(rand() % 256, rand() % 256, rand() % 256));
+
+        admin.createEntity(
+            PhysicsState {.position = Vector2f(x, y), .velocity = Vector2f(rand() % 100 - 50, rand() % 100 - 50)},
+            MassComponent {.value = 100},
+            DrawableComponent {.shape = shape}
+        );
     }
+
     cout << "Generated particles.\n";
 
-    CircleShape circ(5);
-    float vel = 5;
+    ParticleGravitySystem grvSystem;
+    ParticleUpdateSystem updateSystem;
+    RenderSystem renderSystem;
+
+    std::vector<BaseSystem*> systems {&grvSystem, &updateSystem, &renderSystem};
 
     Clock clock;
     Time frameTime = sf::milliseconds(16);
     Time zero;
-    bool paused = true;
     while (app.isOpen()) {
+
         Event event;
+
         while (app.pollEvent(event)) {
             switch (event.type) {
                 case Event::Closed:
@@ -55,7 +75,7 @@ int main(int argc, char* argv[]) {
                             app.close();
                             break;
                         case Keyboard::P:
-                            paused = !paused;
+                            appState->paused = !appState->paused;
                             break;
                         default:
                             break;
@@ -65,32 +85,8 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (!paused) {
-            atomic<unsigned> current(0);
-            vector<thread> threads;
+        admin.tickSystems(0.016, systems);
 
-            size_t numParticles = Particle::particles.size();
-            for (int i = 0; i < 4; i++) {
-                threads.emplace_back([&]() {
-                    for (int i = 0; (i = current++) < numParticles;) {
-                        Particle::particles[i]->preUpdate();
-                    }
-                });
-            }
-
-            for (thread& t : threads) {
-                t.join();
-            }
-
-            for (Particle* p : Particle::particles) {
-                p->update();
-            }
-        }
-
-        app.clear();
-        for (Particle* p : Particle::particles) {
-            app.draw(p->getShape());
-        }
         app.display();
         Time elapsed = clock.restart();
 
@@ -98,10 +94,6 @@ int main(int argc, char* argv[]) {
     }
 
     cout << "Finished loop.\n";
-
-    for (Particle* particle : Particle::particles) {
-        delete particle;
-    }
 
     return 0;
 }
