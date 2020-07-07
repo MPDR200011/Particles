@@ -18,10 +18,8 @@ public:
 
     void removeEntity(EntityHandle entityID);
 
-    template <typename Component>
+    template <Component Component>
     void addComponent(EntityHandle entity, const Component& comp) {
-        VALID_COMP(Component);
-
         ECSComponentCreateFunction createfn =
             BaseECSComponent::getTypeCreateFunction(Component::ID);
         ComponentPool& pool = components[Component::ID];
@@ -29,12 +27,8 @@ public:
         entity->components[Component::ID] = createfn(pool, entity, &comp);
     }
 
-    template <typename... Components>
+    template <Component... Components>
     EntityHandle createEntity(const Components&... comps) {
-        static_assert(
-            (std::is_base_of_v<ECSComponent<Components>, Components> && ...),
-            "Provided template argument must be derived from ECSComponent.");
-
         EntityHandle entity = createEntity();
 
         (addComponent(entity, comps), ...);
@@ -42,31 +36,30 @@ public:
         return entity;
     }
 
-    template <typename Component>
+    template <Component Component>
     bool removeComponent(EntityHandle entity) {
-        VALID_COMP(Component);
-
+        //check if entity has component
         auto search = entity->components.find(Component::ID);
+        //delete it if it has
         if (search != entity->components.end()) {
-            deleteComponent(Component::ID, search->second.first);
+            deleteComponent(Component::ID, search->second);
         }
 
         return entity->components.erase(Component::ID) > 0;
     }
 
-    template <typename Component>
+    template <Component Component>
     Component* getComponent(EntityHandle entity) {
-        VALID_COMP(Component);
-
         auto search = entity->components.find(Component::ID);
         if (search != entity->components.end()) {
-            return (Component*)search->second.second;
+            //return the component in the pool
+            return (Component*) &components[Component::ID][search->second];
         }
 
         return nullptr;
     }
 
-    const std::vector<Entity*> query(std::set<uint32_t>& req) {
+    const std::vector<Entity*> query(const std::set<uint32_t>& req) {
         std::vector<Entity*> res;
 
         if (req.size() == 0) {
@@ -76,15 +69,17 @@ public:
         uint32_t firstComp = *req.begin();
 
         ComponentPool& componentPool = components[firstComp];
-        if (req.size() == 0) {
-            for (BaseECSComponent* comp : componentPool) {
-                res.push_back(comp->entity);
+        size_t compSize = BaseECSComponent::getTypeSize(firstComp);
+        if (req.size() == 1) {
+            for (size_t i = 0; i < componentPool.size(); i+=compSize) {
+                res.push_back(((BaseECSComponent*) &componentPool[i])->entity);
             }
 
             return res;
         }
 
-        for (BaseECSComponent* comp : componentPool) {
+        for (size_t i = 0; i < componentPool.size(); i+=compSize) {
+            BaseECSComponent* comp = (BaseECSComponent*) &componentPool[i];
             bool valid = true;
             for (uint32_t id : req) {
                 if (!comp->entity->components.count(id)) {
@@ -101,15 +96,13 @@ public:
         return res;
     }
 
-    template <typename Component>
+    template <Component Component>
     Component* getSingleton() {
-        VALID_COMP(Component);
         return (Component*)singletons.at(Component::ID);
     }
 
-    template <typename Component>
+    template <Component Component>
     Component* createSingleton(const Component& component) {
-        VALID_COMP(Component);
         if (singletons.count(Component::ID) > 0) {
             return (Component*)singletons[Component::ID];
         }
@@ -121,7 +114,7 @@ public:
         return (Component*)comp;
     }
 
-    template <typename Component>
+    template <Component Component>
     void removeSingleton() {
         singletons.erase(Component::ID);
     }

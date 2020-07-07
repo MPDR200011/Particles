@@ -5,13 +5,14 @@
 #include <utility>
 #include <tuple>
 #include <unordered_map>
+#include <functional>
 #include "ComponentTypes.hpp"
 
 struct BaseECSComponent;
 struct Entity;
 
-typedef std::pair<size_t, BaseECSComponent*> (*ECSComponentCreateFunction)(std::vector<BaseECSComponent*>& pool, Entity* ent, const BaseECSComponent* comp);
-typedef void (*ECSComponentFreeFunction)(BaseECSComponent* comp);
+typedef std::function<size_t(ComponentPool&, Entity*, const BaseECSComponent*)> ECSComponentCreateFunction;
+typedef std::function<void(BaseECSComponent*)> ECSComponentFreeFunction;
 
 struct BaseECSComponent {
 private:
@@ -43,18 +44,19 @@ struct ECSComponent : public BaseECSComponent {
     static const ECSComponentFreeFunction FREE_FUNC;
 };
 
-#define VALID_COMP(T) static_assert(std::is_base_of<ECSComponent<T>, T>::value, "Provided template argument must be derived from ECSComponent")
+template<typename T>
+concept Component = std::is_base_of_v<ECSComponent<T>, T>;
 
 template <typename T>
-std::pair<size_t, BaseECSComponent*> ECSComponentCREATE(std::vector<BaseECSComponent*>& pool, Entity* ent, const BaseECSComponent* comp) {
+size_t ECSComponentCREATE(ComponentPool& pool, Entity* ent, const BaseECSComponent* comp) {
     size_t index = pool.size();
 
-    T* component = new T(*(T*)comp);
+    pool.resize(index + T::SIZE);
+
+    T* component = new(&pool[index])T(*(T*)comp);
     component->entity = ent;
 
-    pool.push_back(component);
-
-    return std::make_pair(index, component);
+    return index;
 }
 
 template <typename T>

@@ -1,7 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 struct BaseECSComponent;
 
-typedef std::vector<BaseECSComponent*> ComponentPool;
+typedef std::vector<std::uint8_t> ComponentPool;

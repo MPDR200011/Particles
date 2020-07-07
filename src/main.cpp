@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 #include "ECSAdmin.hpp"
@@ -20,8 +21,11 @@ int main(int argc, char* argv[]) {
         num = 200;
     }
 
+    const uint32_t width = 1280;
+    const uint32_t height = 720;
+
     cout << "Starting window.\n";
-    sf::RenderWindow app = RenderWindow(VideoMode(800, 600), "Particle Simulator", Style::Titlebar);
+    sf::RenderWindow app = RenderWindow(VideoMode(width, height), "Particle Simulator", Style::Titlebar);
     ECSAdmin admin;
     admin.createSingleton(
         WindowComponent {
@@ -36,8 +40,8 @@ int main(int argc, char* argv[]) {
     cout << "Created window.\n";
     srand(time(nullptr));
     for (int i = 0; i < num; i++) {
-        float x = rand() % 800;
-        float y = rand() % 600;
+        float x = rand() % width;
+        float y = rand() % height;
 
         CircleShape shape(5);
         shape.setFillColor(Color(rand() % 256, rand() % 256, rand() % 256));

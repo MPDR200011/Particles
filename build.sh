@@ -15,3 +15,4 @@ cd build
 cmake -DCMAKE_BUILD_TYPE="$BUILD_TARGET" ../
 make -j 4
 cd ..
+cp build/compile_commands.json .

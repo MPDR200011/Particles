@@ -15,9 +15,8 @@ public:
 
     virtual void tick(double timestep) = 0;
 
-    template <typename Component>
+    template <Component Component>
     void addRequirement() {
-        VALID_COMP(Component);
         requiredComponents.insert(Component::ID);
     }
 
@@ -25,12 +24,12 @@ public:
     void setRequirements(std::set<uint32_t>& req);
     void setRequirements(std::set<uint32_t>&& req);
 
-    template <typename Component>
+    template <Component Component>
     Component* getSingleton() {
         return pool->getSingleton<Component>();
     }
 
-    template <typename Component>
+    template <Component Component>
     Component* getComponent(Entity* entity) {
         return pool->getComponent<Component>(entity);
     }

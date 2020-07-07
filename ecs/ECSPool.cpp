@@ -1,4 +1,6 @@
 #include "ECSPool.hpp"
+#include "Component.hpp"
+#include "ComponentTypes.hpp"
 #include <cstring>
 
 ECSPool::~ECSPool() {
@@ -6,8 +8,8 @@ ECSPool::~ECSPool() {
         ECSComponentFreeFunction freefn = BaseECSComponent::getTypeFreeFunction(it->first);
         size_t componentSize = BaseECSComponent::getTypeSize(it->first);
 
-        for (size_t i = 0; i < it->second.size(); i++) {
-            freefn(it->second[i]);
+        for (size_t i = 0; i < it->second.size(); i += componentSize) {
+            freefn((BaseECSComponent*) &it->second[i]);
         }
     }
 
@@ -29,7 +31,7 @@ EntityHandle ECSPool::createEntity() {
 
 void ECSPool::removeEntity(EntityHandle entity) {
     for (auto &it: entity->components) {
-        deleteComponent(it.first, it.second.first);
+        deleteComponent(it.first, it.second);
     }
 
     size_t destIndex = entity->index;
@@ -49,10 +51,11 @@ void ECSPool::deleteComponent(uint32_t componentType, size_t index) {
     ComponentPool& pool = components[componentType];
 
     ECSComponentFreeFunction freefn = BaseECSComponent::getTypeFreeFunction(componentType);
+    size_t compSize = BaseECSComponent::getTypeSize(componentType);
 
     size_t srcIndex = pool.size() - 1; 
-    BaseECSComponent* srcComponent = pool[srcIndex];
-    BaseECSComponent* destComponnent = pool[index];
+    BaseECSComponent* srcComponent = (BaseECSComponent*) &pool[srcIndex];
+    BaseECSComponent* destComponnent = (BaseECSComponent*) &pool[index];
     freefn(destComponnent);
 
     if (index == srcIndex) {
@@ -60,9 +63,9 @@ void ECSPool::deleteComponent(uint32_t componentType, size_t index) {
         return;
     }
 
-    pool[index] = srcComponent;
+    std::memcpy(destComponnent, srcComponent, compSize);
 
-    srcComponent->entity->components[componentType].first = index;
+    srcComponent->entity->components[componentType] = index;
 
-    pool.pop_back();
+    pool.resize(srcIndex);
 }

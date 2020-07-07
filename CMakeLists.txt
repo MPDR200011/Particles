@@ -20,7 +20,7 @@ add_library(ECS
 )
 
 target_compile_options(ECS
-    PUBLIC -std=c++17
+    PUBLIC -std=c++2a
 )
 
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
