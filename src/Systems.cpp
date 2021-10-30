@@ -112,5 +112,23 @@ void RenderSystem::tick(double timestep) {
 
         comp->shape.setPosition(pos->position);
         window->window->draw(comp->shape);
+
+        auto windowSize = window->window->getSize();
+        auto radius = comp->shape.getRadius();
+        auto position = comp->shape.getPosition();
+        if (position.x - radius < 0) {
+            position.x += windowSize.x;
+        } else if (position.x + radius > windowSize.x) {
+            position.x -= windowSize.x ;
+        } 
+
+        if (position.y - radius < 0) {
+            position.y += windowSize.y;
+        } else if (position.y + radius > windowSize.y) {
+            position.y -= windowSize.y ;
+        }
+        comp->shape.setPosition(position);
+
+        window->window->draw(comp->shape);
     }
 }
