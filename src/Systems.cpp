@@ -1,5 +1,6 @@
 #include "Systems.hpp"
 #include "Components.hpp"
+#include <iostream>
 #include <atomic>
 #include <thread>
 #include <cmath>
@@ -18,6 +19,7 @@ void ParticleGravitySystem::tick(double timestep) {
     std::atomic<size_t> current(0);
     std::vector<std::thread> threads;
 
+    auto windowSize = getSingleton<WindowComponent>()->window->getSize();
     size_t numParticles = entities.size();
     for (int i = 0; i < 4; i++) {
         threads.emplace_back([&]() {
@@ -32,15 +34,45 @@ void ParticleGravitySystem::tick(double timestep) {
                     PhysicsState* dest = getComponent<PhysicsState>(entities[j]);
                     MassComponent* destMass = getComponent<MassComponent>(entities[j]);
 
-                    sf::Vector2f direction = dest->position - comp->position;
+                    auto destPosition = dest->position;
+
+                    sf::Vector2f direction = destPosition - comp->position;
                     float distance = sqrtf(powf(direction.x, 2) + powf(direction.y, 2)) * 0.1f;
                     if (distance < 1) {
                         continue;
                     }
 
+                    // Gravity across margins
+                    std::vector<sf::Vector2f> destPositions = {
+                        destPosition + sf::Vector2f(windowSize.x, 0),
+                        destPosition + sf::Vector2f(-(float)windowSize.x, 0),
+                        destPosition + sf::Vector2f(0, windowSize.y),
+                        destPosition + sf::Vector2f(0, -(float)windowSize.y),
+                        destPosition + sf::Vector2f(windowSize.x, windowSize.y),
+                        destPosition + sf::Vector2f(-(float)windowSize.x, windowSize.y),
+                        destPosition + sf::Vector2f(windowSize.x, -(float)windowSize.y),
+                        destPosition + sf::Vector2f(-(float)windowSize.x, -(float)windowSize.y),
+                    };
+
+                    int counter = 0;
+                    for (const auto& reflectedDest: destPositions) {
+                        sf::Vector2f reflectedDirection = reflectedDest - comp->position;
+                        float reflectedDistance = sqrtf(powf(reflectedDirection.x, 2) + powf(reflectedDirection.y, 2)) * 0.1f;
+
+                        if (reflectedDistance < 1) {
+                            continue;
+                        }
+
+                        if (reflectedDistance < distance) {
+                            distance = reflectedDistance;
+                            direction = reflectedDirection;
+                        }
+                    }
+
                     direction /= distance;
 
                     float attractionForceMag = mass->value * destMass->value / powf(distance, 2);
+                    // NaN check
                     if (attractionForceMag == attractionForceMag) {
                         sf::Vector2f gravForce = direction * attractionForceMag;
                         comp->velocity += gravForce / mass->value * (float) timestep;
@@ -69,7 +101,7 @@ void ParticleUpdateSystem::tick(double timestep) {
     std::atomic<size_t> current(0);
     std::vector<std::thread> threads;
 
-    WindowComponent* window = getSingleton<WindowComponent>();
+    auto windowSize = getSingleton<WindowComponent>()->window->getSize();
     size_t numParticles = entities.size();
     for (int i = 0; i < 4; i++) {
         threads.emplace_back([&]() {
@@ -78,7 +110,6 @@ void ParticleUpdateSystem::tick(double timestep) {
 
                 state->position += state->velocity *  (float) timestep;
 
-                auto windowSize = window->window->getSize();
                 auto position = state->position;
                 if (position.x < 0) {
                     state->position.x = windowSize.x + position.x;
@@ -105,6 +136,7 @@ RenderSystem::RenderSystem() {
 
 void RenderSystem::tick(double timestep) {
     WindowComponent* window = getSingleton<WindowComponent>();
+    auto windowSize = window->window->getSize();
     window->window->clear();
     for (EntityHandle ent: getEntities()) {
         PhysicsState* pos = getComponent<PhysicsState>(ent);
@@ -113,7 +145,6 @@ void RenderSystem::tick(double timestep) {
         comp->shape.setPosition(pos->position);
         window->window->draw(comp->shape);
 
-        auto windowSize = window->window->getSize();
         auto radius = comp->shape.getRadius();
         auto position = comp->shape.getPosition();
         if (position.x - radius < 0) {

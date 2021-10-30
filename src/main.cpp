@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include "ECSAdmin.hpp"
 #include "Components.hpp"
 #include "Systems.hpp"
@@ -43,8 +44,10 @@ int main(int argc, char* argv[]) {
         float x = rand() % width;
         float y = rand() % height;
 
-        CircleShape shape(5);
+        float radius = 5;
+        CircleShape shape(radius);
         shape.setFillColor(Color(rand() % 256, rand() % 256, rand() % 256));
+        shape.setOrigin(radius/2, radius/2);
 
         admin.createEntity(
             PhysicsState {.position = Vector2f(x, y), .velocity = Vector2f(rand() % 100 - 50, rand() % 100 - 50)},
