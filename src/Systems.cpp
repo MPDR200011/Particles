@@ -69,6 +69,7 @@ void ParticleUpdateSystem::tick(double timestep) {
     std::atomic<size_t> current(0);
     std::vector<std::thread> threads;
 
+    WindowComponent* window = getSingleton<WindowComponent>();
     size_t numParticles = entities.size();
     for (int i = 0; i < 4; i++) {
         threads.emplace_back([&]() {
@@ -76,6 +77,19 @@ void ParticleUpdateSystem::tick(double timestep) {
                 PhysicsState* state = getComponent<PhysicsState>(entities[i]);
 
                 state->position += state->velocity *  (float) timestep;
+
+                auto windowSize = window->window->getSize();
+                auto position = state->position;
+                if (position.x < 0) {
+                    state->position.x = windowSize.x + position.x;
+                } else if (position.x > windowSize.x) {
+                    state->position.x = position.x - windowSize.x ;
+                } 
+                if (position.y < 0) {
+                    state->position.y = windowSize.y + position.y;
+                } else if (position.y > windowSize.y) {
+                    state->position.y = position.y - windowSize.y ;
+                }
             }
         });
     }
